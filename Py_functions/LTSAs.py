@@ -29,7 +29,6 @@ def make_freq_vector_tob(max_freq, min_freq=10.0):
 def compute_ltsa_tob_jomopans(audio_data, sample_rate, time_bin_duration, max_freq, chunk_duration=300):
     """
     Compute TOB LTSA following JOMOPANS standard (Section 3.3.2 & 3.4)
-    Processes audio in chunks to avoid memory issues with large files.
    
     Parameters
     ----------

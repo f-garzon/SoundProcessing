@@ -39,7 +39,7 @@ Usage
 Edit the CONFIGURATION block below, then run:
     python summarise_acoustic.py
 
-Dependencies: numpy, pandas, openpyxl  (no matplotlib required)
+Dependencies: numpy, pandas, openpyxl
 """
 
 import os

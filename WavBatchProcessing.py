@@ -1,16 +1,14 @@
 """
-Batch processing script for SoundTrap .wav files - OPTIMIZED VERSION
+Batch processing script for SoundTrap .wav files
 Processes continuous recordings to extract:
-1. Long-term spectral averages (LTSA) 0-50 kHz in 1Hz Bins
-2. Long-term spectral averages (LTSA) 0-50 kHz in TOBs
-3. Whistle/moan detection for cetaceans
+1. Long-term spectral averages (LTSA) 0-50 kHz in TOBs
 
-OPTIMIZATIONS:
-- Vectorized JOMOPANS TOB calculation (50-100x faster)
-- Combined spectrogram computation for 1Hz and TOB LTSA
-- Pre-allocated arrays to reduce memory churn
-- Optimized band power calculations
-- More efficient parallel processing
+Requires a calibration spreadsheet (Excel) with soundTrap serial numbers 
+and Low_Gain values for each SoundTrap to convert to Pa 
+
+Assumes filename structure contains datetime and serial number 
+(e.g. S21_9471_260213.wav where S21 is station ID, 9471 is serial number, 
+and 260213 is the date)
 
 Outputs tab-separated (.tab) files for subsequent summaries
 """
@@ -47,9 +45,6 @@ SUD_PATH = "E:\\S3\\RAW\\SoundTrap\\S21\\S21_9471_260213"
 OUTPUT_PATH = "E:\\S3\\Processed\\SoundTrap\\S21\\S21_9471_260213"
 
 # Calibration spreadsheet (Excel) containing serial numbers and Low_Gain column
-#mac
-#CAL_FILE = "/Users/francescogarzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/SoundTrapCalibration.xlsx"
-#windows
 CAL_FILE = "C:/Users/fg363/OneDrive - University of Exeter/Projects/S3 Project - Documents/Data/SoundTrapCalibration.xlsx"
 
 # LTSA parameters

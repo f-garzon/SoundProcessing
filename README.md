@@ -36,7 +36,7 @@ Computes and exports summary tables including:
 
 ## Quick start
 
-1. Ensure Python 3.8+ is installed.
+1. Ensure Python 3.8+ is installed (Scripts were last tested with Python 3.13.12).
 2. Install required libraries:
 
 ```bash

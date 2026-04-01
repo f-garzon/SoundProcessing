@@ -40,26 +40,6 @@ library(patchwork)
 library(httr)
 library(jsonlite)
 
-# Set data path
-data_path <- '/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/'
-
-## Get station metadata
-meta <- readxl::read_xlsx(paste0(data_path,"MetaData.xlsx"))
-
-## Set station of interest
-station <- 21
-
-# Load spatial data
-# Land polygon (coastline)
-land_sf <- read_sf('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/GIS/Land/gadm36_0.shp')
-
-#PDAs polygon
-pda_sf <- read_sf('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/GIS/PDAs/PDAs.shp')
-
-# Stations point data (8 stations in a grid)
-stations_sf <- read_sf("/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/GIS/s3_locations_new_wgs84.shp")
-names(stations_sf)[1]<-"Station"
-
 # Get coordinates of the focal station
 focal_station <- stations_sf %>% filter(Station == station)
 
@@ -93,8 +73,8 @@ theme_custom <- theme_classic()+
 ```{r title_page_layout, fig.width=12, fig.height=6, out.width="100%"}
 
 # Create a simple title page with station info on left and placeholder for map on right
-start <- meta$DateTime_deploy_UTC[meta$Station==paste0("S",station)]
-end <- meta$DateTime_retrieve_UTC[meta$Station==paste0("S",station)]
+start <- as.POSIXct(meta$DateTime_deploy_UTC[meta$Station==station_s], tz = "GMT")
+end <- as.POSIXct(meta$DateTime_retrieve_UTC[meta$Station==station_s], tz = "GMT")
 
 # Station details
 station_info <- data.frame(
@@ -107,13 +87,13 @@ station_info <- data.frame(
             "Hydrophone serial:",
             "Hydrophone duty cycle:",
             "Report generated"),
-  value = c(paste0("S", sprintf("%02d",station)),
-            paste0(date(start)," to ", date(end)),
-            paste0(meta$Latitude_deploy[meta$Station==paste0("S", sprintf("%02d",station))],"°,  ",meta$Longitude_deploy[meta$Station==paste0("S", sprintf("%02d",station))],"°"),
+  value = c(station_s,
+            paste0(lubridate::date(start)," to ", lubridate::date(end)),
+            paste0(meta$Latitude_deploy[meta$Station==station_s],"°,  ",meta$Longitude_deploy[meta$Station==station_s],"°"),
             "120 m",
-            meta$ARC_VR2AR[meta$Station==paste0("S", sprintf("%02d",station))],
-            meta$FPOD[meta$Station==paste0("S", sprintf("%02d",station))],
-            meta$Hydrophone[meta$Station==paste0("S", sprintf("%02d",station))],
+            meta$ARC_VR2AR[meta$Station==station_s],
+            meta$FPOD[meta$Station==station_s],
+            meta$Hydrophone[meta$Station==station_s],
             "50% on (15 min in 30 min)",
             format(Sys.Date(), "%B %d, %Y")
   )
@@ -273,7 +253,7 @@ wind_dir <- ggplot(data = weather_df, aes( x = DateTime, y = wind_direction_mean
   labs(title = "<b>Wind direction</b> <i style='font-size:14pt'>(source: OpenMeteo)</i>")
 
 # Get current data from POLPRED
-current_data <- read.csv('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/POLPRED/S21_14oct25_16Jan26.csv', skip = 4)
+current_data <- read.csv(paste0('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/POLPRED/',station_s,'.csv'), skip = 4)
 current_data$time <- as.POSIXct(current_data$Date.Time..UTC., format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
 current_data <- filter(current_data,
@@ -300,7 +280,8 @@ curr_speed <- ggplot(current_data, aes(x = time, y = current_speed)) +
 
 # Get temeprature data from VR2AR
 # Read skipping the first 4 header rows, no column names
-raw <- read_csv("/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/Processed_Sensors/VR2AR/S21/S21_R1/VR2AR-69 556544 2026-02-13 155019 SENSORS.csv",
+a<-list.files("/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/Processed_Sensors/VR2AR", pattern = paste0(station_s,"_R1"), full.names = T)
+raw <- read_csv(a[3],
                 skip = 4,
                 col_names = FALSE,
                 show_col_types = FALSE)
@@ -327,12 +308,14 @@ temp_df <- raw %>%
     temperature_sd      = sd(temp_ambient)
   )
 
-t_pod <- read.csv('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/Processed_Sensors/FPod/S21/S21_R1/S21_R1 2025 10 10 FPOD_8432 file0 PART 93d 11h 38m mixed  DetEnv.csv')
+a<-list.files('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/Processed_Sensors/FPod', pattern = paste0(station_s,"_R1"), full.names = T)
+
+t_pod <- read.csv(a[2])
 t_pod$DateTime <- as.POSIXct(t_pod$ChunkEnd, formqat = "%Y/%m/%d %H:%M", tz = "GMT")
 t_pod <- filter (t_pod, DateTime >= start, DateTime <= end)
 
 temp <- ggplot(temp_df, aes(x = DateTime)) +
-  geom_line(data = t_pod, aes(y = Temp), colour = "black", alpha = 0.8, linewidth = 1)+
+  #geom_line(data = t_pod, aes(y = Temp), colour = "black", alpha = 0.8, linewidth = 1)+
   geom_line(aes(y = temperature_mean), colour = "#d17432", linewidth = 1)+
   #geom_ribbon(data = weather_df, aes(ymin = temperature_mean-temperature_sd, ymax = temperature_mean+temperature_sd), fill = "grey80", alpha = 0.5)+
   #geom_line(data = weather_df, aes(y = temperature_mean))+
@@ -365,7 +348,7 @@ grid.arrange(wind_speed, wind_dir, curr_speed, temp, ncol = 1)
 
 ```{r quantiles_plot, fig.width=12, fig.height=4.5, out.width="100%"}
 #quant_file <- file.path(output_path, "all_quantiles.csv")
-quant_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/S21/S21_R1/quantile_spectral_density_12h.csv"))
+quant_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/",station_s,"/",station_s,"_R1_",meta$Hydrophone[meta$Station==station_s],"/quantile_spectral_density_12h.csv"))
 
 if (file.exists(quant_file)) {
   q <- read_csv(quant_file, show_col_types = FALSE)
@@ -399,7 +382,7 @@ if (file.exists(quant_file)) {
 
 ```{r ltsa_plot, fig.width=12, fig.height=7, out.width="100%"}
 #ltsa_file <- file.path(output_path, "all_ltsa.csv")
-ltsa_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/S21/S21_R1/ltsa_12h.csv"))
+ltsa_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/",station_s,"/",station_s,"_R1_",meta$Hydrophone[meta$Station==station_s],"/ltsa_12h.csv"))
 
 if (file.exists(ltsa_file)) {
   ltsa <- read_csv(ltsa_file, guess_max = 10000, show_col_types = FALSE)
@@ -417,7 +400,7 @@ if (file.exists(ltsa_file)) {
                   labels = c("10","20","50","100","200","500","1k","2k","5k","9k")) +
     scale_x_datetime(expand = c(0,0), breaks = "15 days", date_labels = "%b %d")+
     #scale_y_log10()+
-    scale_fill_viridis_c(name = "Power\n(dB re 1µPa²/Hz)", na.value = "grey95") +
+    scale_fill_viridis_c(name = "Power\n(dB re 1µPa²/Hz)", na.value = "grey95", limits = c(60,115)) +
     theme_custom +
     theme(legend.position = "bottom", 
           legend.title = element_text())+
@@ -434,7 +417,7 @@ if (file.exists(ltsa_file)) {
 
 ```{r loud_event, fig.width=12, fig.height=6, out.width="100%"}
 #spl_file <- file.path(output_path, "all_spl.csv")
-loud_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/S21/S21_R1/loud_events.csv"))
+loud_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/",station_s,"/",station_s,"_R1_",meta$Hydrophone[meta$Station==station_s],"/loud_events.csv"))
 
 if (file.exists(loud_file)) {
   loud <- read_csv(loud_file, show_col_types = FALSE)
@@ -479,7 +462,7 @@ if (file.exists(loud_file)) {
 
 ```{r spl_plot, fig.width=12, fig.height=7, out.width="100%"}
 #spl_file <- file.path(output_path, "all_spl.csv")
-spl_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/S21/S21_R1/spl_timeseries_12h.csv"))
+spl_file <- file.path(paste0(data_path,"Processed_Sensors/SoundTrap/",station_s,"/",station_s,"_R1_",meta$Hydrophone[meta$Station==station_s],"/spl_timeseries_12h.csv"))
 
 if (file.exists(spl_file)) {
   spl <- read_csv(spl_file, show_col_types = FALSE)
@@ -516,19 +499,20 @@ if (file.exists(spl_file)) {
 
 ```{r cetacean_presence, fig.width=12, fig.height=8, out.width="100%"}
 # Create timeline of detections and species pie chart
+files<- list.files(paste0(data_path,"Processed_Sensors/FPod"), full.names = T)
 
-dol <- read.csv(list.files(paste0(data_path,"Processed_Sensors/FPod/S21/S21_R1"), pattern = "Dol TrainDuration.csv", full.names = T))
+dol <- read.csv(files[grepl(station_s, files) & grepl("Dol TrainDuration", files)])
 dol$Class <- "Dolphin"
 
-nb <- read.csv(list.files(paste0(data_path,"Processed_Sensors/FPod/S21/S21_R1"), pattern = "NB TrainDuration.csv", full.names = T))
+nb <- read.csv(files[grepl(station_s, files) & grepl("NB TrainDuration", files)])
 nb$Class <- "Porpoise"
 
-sonar <- read.csv(list.files(paste0(data_path,"Processed_Sensors/FPod/S21/S21_R1"), pattern = "Sonar TrainDuration.csv", full.names = T))
+sonar <- read.csv(files[grepl(station_s, files) & grepl("Sonar TrainDuration", files)])
 sonar$Class <- "Sonar"
 
 cet_all <- rbind(dol, nb, sonar)
 
-cet_all$ChunkEnd <- as.POSIXct(cet_all$ChunkEnd, format = "%Y/%m/%d %H:%M", tz = "GMT")
+cet_all$ChunkEnd <- as.POSIXct(cet_all$ChunkEnd, tryFormats = c("%d/%m/%Y %H:%M","%Y/%m/%d %H:%M"), tz = "GMT")
 cet_all <- filter(cet_all,
                   ChunkEnd>= start, ChunkEnd<=end)%>%
   distinct()
@@ -596,9 +580,10 @@ cet_rose
 
 ```{r VR2AR_detections, fig.width=12, fig.height=5, out.width="100%"}
 # Create timeline of detections
+files<- list.files(paste0(data_path,"Processed_Sensors/VR2AR"), full.names = T)
 
-det <- read.csv('/Users/f.garzon/Library/CloudStorage/OneDrive-UniversityofExeter/Projects/S3 Project - Documents/Data/Processed_Sensors/VR2AR/S21/S21_R1/VR2AR-69 556544 2026-02-13 155019 DETECTS_noHeader.csv')
-det$DateTime<- as.POSIXct(det$Device.Time..UTC.)
+det <- read.csv(files[grepl(station_s, files) & grepl("DETECTS_noHeader", files)])
+det$DateTime<- as.POSIXct(det$Device.Time..UTC., tz = "GMT")
 
 det <- filter(det,
               DateTime>=start, DateTime<=end)

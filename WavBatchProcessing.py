@@ -41,8 +41,8 @@ except ImportError:
 
 # conda activate /Users/francescogarzon/miniconda3/envs/s3proj
 
-SUD_PATH = "E:\\S3\\RAW\\SoundTrap\\S21\\S21_9471_260213"
-OUTPUT_PATH = "E:\\S3\\Processed\\SoundTrap\\S21\\S21_9471_260213"
+SUD_PATH = "E:\\S3\\RAW\\SoundTrap\\S21\\S21_R1_9471"
+OUTPUT_PATH = "E:\\S3\\Processed\\SoundTrap\\S21\\S21_R1_9471"
 
 # Calibration spreadsheet (Excel) containing serial numbers and Low_Gain column
 CAL_FILE = "C:/Users/fg363/OneDrive - University of Exeter/Projects/S3 Project - Documents/Data/SoundTrapCalibration.xlsx"

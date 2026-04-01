@@ -1,4 +1,4 @@
-<img width="1107" height="494" alt="Screenshot 2026-04-01 at 15 31 09" src="https://github.com/user-attachments/assets/6f1a965a-b858-40e2-b8ca-054b8814b94c" />
+<img width="985" height="444" alt="Screenshot 2026-04-01 at 15 34 56" src="https://github.com/user-attachments/assets/31b7d99e-ac6f-46b8-bbc7-b9e6b654b265" />
 
 # Broadband Sound Processing
 
@@ -49,14 +49,14 @@ pip install -r requirements.txt
 
 ```bash
 cd WavBatchProcessing
-python process_wav_batch.py --input /path/to/wav --output /path/to/wavbatch-out
+python process_wav_batch.py --input /path/to/wav --output /path/to/wavbatch-out --cal_file /path/to/calibration_file
 ```
 
 - Use `Soundtrap_summary.py` on the `WavBatchProcessing` output to produce LTSA, spectral quantile plots, and third-octave-band SPL estimates.
 
 ```bash
 cd ..
-python Soundtrap_summary.py --input /path/to/wavbatch-out --output /path/to/soundtrap-summary
+python BroadBandSummaries.py --input /path/to/wavbatch-out --output /path/to/soundtrap-summary
 ```
 
 (Replace script names/CLI args with actual ones in your repo; inspect `WavBatchProcessing` and `Soundtrap_summary.py`.)

@@ -41,7 +41,7 @@ except ImportError:
 
 # conda activate /Users/francescogarzon/miniconda3/envs/s3proj
 
-SUD_PATH = "E:\\S3\\RAW\\SoundTrap\\S21\\S21_R1_9471"
+INPUT_PATH = "E:\\S3\\RAW\\SoundTrap\\S21\\S21_R1_9471"
 OUTPUT_PATH = "E:\\S3\\Processed\\SoundTrap\\S21\\S21_R1_9471"
 
 # Calibration spreadsheet (Excel) containing serial numbers and Low_Gain column
@@ -165,15 +165,15 @@ def main():
     print(f"\nOutput directory: {OUTPUT_PATH}")
     
     # Find .wav files
-    sud_files = sorted(glob.glob(os.path.join(SUD_PATH, "**/*.sud"), recursive=True))
-    wav_files = sorted(glob.glob(os.path.join(SUD_PATH, "**/*.wav"), recursive=True))
+    sud_files = sorted(glob.glob(os.path.join(INPUT_PATH, "**/*.sud"), recursive=True))
+    wav_files = sorted(glob.glob(os.path.join(INPUT_PATH, "**/*.wav"), recursive=True))
 
     if len(wav_files) == 0:
         if len(sud_files) > 0:
-            print(f"\nERROR: Found {len(sud_files)} .sud files but no .wav files in {SUD_PATH}.")
+            print(f"\nERROR: Found {len(sud_files)} .sud files but no .wav files in {INPUT_PATH}.")
             print("Please convert .sud -> .wav (SoundTrap export) and place .wav files in the folder.")
         else:
-            print(f"\nERROR: No .wav files found in {SUD_PATH}")
+            print(f"\nERROR: No .wav files found in {INPUT_PATH}")
         return
 
     print(f"\nFound {len(wav_files)} .wav files to process")

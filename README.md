@@ -8,6 +8,8 @@ A collection of Python scripts and modules for acoustic data loading, calibratio
 - Standardize calibration and SPL/comparison metrics
 - Enable batch processing of long recordings and WAV datasets
 
+## Sample data
+A folder of sample Wav files and calibration data can be found here:
 
 ## Repository structure
 
